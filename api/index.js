@@ -1,19 +1,41 @@
 /*
- *
  * Primary file for the API
- *
- *
- *
  */
 
  // Dependencies
  var http = require('http');
+ var https = require('https');
  var url = require('url');
  var StringDecoder = require('string_decoder').StringDecoder;
+ var config = require('./config');
+ var fs = require('fs');
 
- // server sould respond to all requests with a string
- var server = http.createServer(function(req,res){
+ // instantiate http server
+ var httpServer = http.createServer(function(req,res){
+     unifiedServer(req,res);
+ });
 
+ // Start http server at proper currentEnvironment.port (staging || production)
+ httpServer.listen(config.httpPort,function(){
+     console.log("The http server is listening on port "+config.httpPort);
+ });
+
+ // instantiate https server
+ var httpsServerOptions = {
+     'key' : fs.readFileSync('./https/key.pem'),
+     'cert' : fs.readFileSync('./https/cert.pem')
+ };
+ var httpsServer = https.createServer(httpsServerOptions,function(req,res){
+     unifiedServer(req,res);
+ });
+
+ // start https server
+ httpsServer.listen(config.httpsPort,function(){
+     console.log("The https server is listening on port "+config.httpsPort);
+ });
+
+ // all server logic for both http & httpsPort
+ var unifiedServer = function(req,res){
      // get URL and parse interval
      var parsedUrl = url.parse(req.url,true);
 
@@ -46,11 +68,11 @@
 
          // construct data object for handler
          var data = {
-             'trimmedPath': trimmedPath,
-             'queryStringObject': queryStringObject,
-             'method': method,
-             'headers': headers,
-             'payload': buffer,
+             'trimmedPath' : trimmedPath,
+             'queryStringObject' : queryStringObject,
+             'method' : method,
+             'headers' : headers,
+             'payload' : buffer
          };
 
          // route req to handler specified in router
@@ -70,24 +92,18 @@
              res.writeHead(statusCode);
              res.end(payloadString);
              // log data
-             console.log(data);
+             console.log(data,'Return status code:',statusCode);
          });
      });
- });
-
- // Start server and have it listen on PORT 3000
- server.listen(3000,function(){
-     console.log("The server is listening on port 3000 now");
- });
+ };
 
  // define handlers
  var handlers = {};
 
- // sample handler
- handlers.sample = function(data,callback){
-     // callback http status code and payload object
-     callback(406,{'name' : 'sample handler'});
- };
+ // ping handler
+ handlers.ping = function(data,callback){
+     callback(200);
+ }
 
  // not found handler (404)
  handlers.notFound = function(data,callback){
@@ -96,5 +112,5 @@
 
  // define request router
  var router = {
-     'sample' : handlers.sample,
+     'ping' : handlers.ping,
  };
