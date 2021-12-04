@@ -72,9 +72,9 @@
      });
  });
 
- // Start server at proper env.port
+ // Start server at proper currentEnvironment.port (staging || production)
  server.listen(config.port,function(){
-     console.log("The server is listening on port 3000 now");
+     console.log("The server is listening on port "+config.port+" in "+config.envName+" mode");
  });
 
  // define handlers

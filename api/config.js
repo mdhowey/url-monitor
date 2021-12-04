@@ -1,7 +1,5 @@
 /*
  * Create and export config variables
- *
- *
  */
 
  // container for all enviornments
@@ -18,11 +16,11 @@
      'envName' : 'production'
  };
 
-// environment selection logic on command line
-var currentEnvironment = typeof(process.env.NODE_ENV) == 'string' ? process.env.NODE_ENV.toLowerClass() : '';
+ // environment selection logic on command line
+ var currentEnvironment = typeof(process.env.NODE_ENV) == 'string' ? process.env.NODE_ENV : '';
 
-// check that current environment is defined
-var environmentToExport = typeof(environments[currentenvironment]) == 'object' ? environments[currentenvironment] : environments.staging;
+ // check that current environment is defined
+ var environmentToExport = typeof(environments[currentEnvironment]) == 'object' ? environments[currentEnvironment] : environments.staging;
 
-// export module
-module.exports = environmentToExport;
+ // export module
+ module.exports = environmentToExport;
