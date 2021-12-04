@@ -9,6 +9,14 @@
  var StringDecoder = require('string_decoder').StringDecoder;
  var config = require('./config');
  var fs = require('fs');
+ var _data = require('./lib/data');
+
+ // TESTING
+ // @TODO delete this
+ _data.delete('test','newFile',function(err,data){
+     console.log('this was the error',err);
+ });
+
 
  // instantiate http server
  var httpServer = http.createServer(function(req,res){
