@@ -82,8 +82,27 @@ handlers._users.post = function(data,callback){
 };
 
 // users - get
+// required data: phone
+// option data: none
+// @TODO set up auth so users can only access their own objects, not other users' objects
 handlers._users.get = function(data,callback){
-    
+    // check that phone number is valid
+    var phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
+    if(phone){
+        // lookup the user
+        _data.read('users',phone,function(err,data){
+            if(!err && data){
+                // remove hash before returning
+                delete data.hashedPassword;
+                callback(200,data);
+            } else {
+                callback(404);
+            }
+        })
+    } else {
+        callback(400, { 'Error' : 'Missing required field' });
+    }
+    //
 };
 
 // users - put
