@@ -9,11 +9,21 @@ var helpers = require('./helpers')
 // define handlers
 var handlers = {};
 
+// ping handler
+handlers.ping = function(data,callback){
+    callback(200);
+}
+
+// not found handler (404)
+handlers.notFound = function(data,callback){
+    callback(404);
+};
+
 // users
 handlers.users = function(data,callback){
     var acceptableMethods = ['post','get','put','delete'];
     if(acceptableMethods.indexOf(data.method) > -1){
-        hundlers._users[data.method](data,callback);
+        handlers._users[data.method](data,callback);
     } else {
         // 405 method not allowed
         callback(405);
@@ -43,10 +53,10 @@ handlers._users.post = function(data,callback){
                 // create user object
                 if(hashedPasswrod) {
                     var userObject = {
-                        'firstName' : 'firstName',
-                        'lastName' : 'lastName',
-                        'phone' : 'phone',
-                        'password' : 'hashedPasswrod',
+                        'firstName' : firstName,
+                        'lastName' : lastName,
+                        'phone' : phone,
+                        'password' : hashedPasswrod,
                         'tosAgreement' : true
                     };
                     // store user
@@ -73,7 +83,7 @@ handlers._users.post = function(data,callback){
 
 // users - get
 handlers._users.get = function(data,callback){
-
+    
 };
 
 // users - put
@@ -86,15 +96,5 @@ handlers._users.delete = function(data,callback){
 
 };
 
-// ping handler
-handlers.ping = function(data,callback){
-    callback(200);
-}
-
-// not found handler (404)
-handlers.notFound = function(data,callback){
-    callback(404);
-};
-
 // export module
-module.exports = handlers
+module.exports = handlers;

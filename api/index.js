@@ -49,7 +49,7 @@
      var queryStringObject = parsedUrl.query;
 
      // get HTTP method
-     var method = req.method.toUpperCase();
+     var method = req.method.toLowerCase();
 
      // get headers as object
      var headers = req.headers;
@@ -94,7 +94,7 @@
              res.writeHead(statusCode);
              res.end(payloadString);
              // log data
-             console.log(data,'Return status code:',statusCode);
+             console.log(trimmedPath,statusCode);
          });
      });
  };
