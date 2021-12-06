@@ -98,11 +98,10 @@ handlers._users.get = function(data,callback){
             } else {
                 callback(404);
             }
-        })
+        });
     } else {
         callback(400, { 'Error' : 'Missing required field' });
-     }
-    //
+    }
 };
 
 // users - put
@@ -147,17 +146,41 @@ handlers._users.put = function(data,callback){
                 }
             });
         } else {
-            callback(400, {'Error' : 'Missing fields to update'})
+            callback(400, {'Error' : 'Missing fields to update'});
         }
     } else {
-        callback(400, {'Error' : 'Missing reaquired field'})
+        callback(400, {'Error' : 'Missing reaquired field'});
     }
 };
 
 // users - delete
+// required field : phone
+// @TODO only auth'd user can delte thier own obj
+// @TODO cleanup all users data with user obj
 handlers._users.delete = function(data,callback){
-
+    // check phone number validity
+    var phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
+    if(phone){
+        // lookup the user
+        _data.read('users',phone,function(err,data){
+            if(!err && data){
+                _data.delete('users',phone,function(err){
+                    if(!err){
+                        callback(200);
+                    } else {
+                        callback(500,{ 'Error' : 'Could not delete specified user' });
+                    }
+                });
+            } else {
+                callback(400, { 'Error' : 'Could not find specified user' });
+            }
+        });
+    } else {
+        callback(400, { 'Error' : 'Missing required field' });
+    }
 };
+
+
 
 // export module
 module.exports = handlers;
