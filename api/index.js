@@ -7,16 +7,10 @@
  var https = require('https');
  var url = require('url');
  var StringDecoder = require('string_decoder').StringDecoder;
- var config = require('./config');
+ var config = require('./lib/config');
  var fs = require('fs');
- var _data = require('./lib/data');
-
- // TESTING
- // @TODO delete this
- _data.delete('test','newFile',function(err,data){
-     console.log('this was the error',err);
- });
-
+ var handlers = require('./lib/handlers');
+ var helpers = require('./lib/helpers');
 
  // instantiate http server
  var httpServer = http.createServer(function(req,res){
@@ -80,7 +74,7 @@
              'queryStringObject' : queryStringObject,
              'method' : method,
              'headers' : headers,
-             'payload' : buffer
+             'payload' : helpers.parseJsonToObject(buffer)
          };
 
          // route req to handler specified in router
@@ -105,20 +99,8 @@
      });
  };
 
- // define handlers
- var handlers = {};
-
- // ping handler
- handlers.ping = function(data,callback){
-     callback(200);
- }
-
- // not found handler (404)
- handlers.notFound = function(data,callback){
-     callback(404);
- };
-
  // define request router
  var router = {
      'ping' : handlers.ping,
+     'users' : handlers.users
  };
