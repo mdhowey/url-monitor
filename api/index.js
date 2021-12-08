@@ -49,7 +49,7 @@
      var queryStringObject = parsedUrl.query;
 
      // get HTTP method
-     var method = req.method.toUpperCase();
+     var method = req.method.toLowerCase();
 
      // get headers as object
      var headers = req.headers;
@@ -93,8 +93,8 @@
              res.setHeader('Content-Type','application/json');
              res.writeHead(statusCode);
              res.end(payloadString);
-             // log data
-             console.log(data,'Return status code:',statusCode);
+             // logger
+             console.log(trimmedPath,statusCode);
          });
      });
  };
@@ -102,5 +102,6 @@
  // define request router
  var router = {
      'ping' : handlers.ping,
-     'users' : handlers.users
+     'users' : handlers.users,
+     'tokens' : handlers.tokens
  };
