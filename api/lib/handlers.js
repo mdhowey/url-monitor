@@ -257,13 +257,62 @@ handlers._tokens.get = function(data,callback){
 };
 
 // tokens put
+// required fields: id, extend
+// optional data: none
 handlers._tokens.put = function(data,callback){
-
+    var id = typeof(data.payload.id) == 'string' && data.payload.id.trim().length === 20 ? data.payload.id.trim() : false;
+    var extend = typeof(data.payload.extend) == 'boolean' && data.payload.extend == true ? true : false;
+    if(id && extend){
+        // lookup token
+        _data.read('tokens',id,function(err,tokenData){
+            if(!err && tokenData){
+                // check and make sure token isn't expired
+                if(tokenData.expires > Date.now()){
+                    tokenData.expires = Date.now() + 1000 * 60 * 60;
+                    // store update
+                    _data.update('tokens',id,tokenData,function(err){
+                        if(!err){
+                            callback(200);
+                        } else {
+                            callback(500,{ 'Error' : 'Could not update token expiration' });
+                        }
+                    });
+                } else {
+                    callback(400,{ 'Error': 'Token is expired and cannot be extended' });
+                }
+            } else {
+                callback(44,{'Error' : 'Specificed token does not exist'})
+            }
+        });
+    } else {
+        callback(400,{'Error' : 'Missing required field(s) or invalid field(s)'})
+    }
 };
 
 // tokens delete
+// required data: id
+// optional data: none
 handlers._tokens.delete = function(data,callback){
-
+    // check id is valid
+    var id = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+    if(id){
+        // lookup the token
+        _data.read('tokens',id,function(err,data){
+            if(!err && data){
+                _data.delete('tokens',id,function(err){
+                    if(!err){
+                        callback(200);
+                    } else {
+                        callback(500,{ 'Error' : 'Could not delete specified token' });
+                    }
+                });
+            } else {
+                callback(400, { 'Error' : 'Could not find specified token' });
+            }
+        });
+    } else {
+        callback(400, { 'Error' : 'Missing required field' });
+    }
 };
 
 // export module
