@@ -56,7 +56,7 @@ handlers._users.post = function(data,callback){
                         'firstName' : firstName,
                         'lastName' : lastName,
                         'phone' : phone,
-                        'password' : hashedPasswrod,
+                        'hashedPassword' : hashedPasswrod,
                         'tosAgreement' : true
                     };
                     // store user
@@ -180,7 +180,76 @@ handlers._users.delete = function(data,callback){
     }
 };
 
+// tokens
+handlers.tokens = function(data,callback){
+    var acceptableMethods = ['post','get','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._tokens[data.method](data,callback);
+    } else {
+        // 405 method not allowed
+        callback(405);
+    }
+};
 
+// container for token methods
+handlers._tokens = {};
+
+// tokens post
+// required data: phone, password
+// optional data: none
+handlers._tokens.post = function(data,callback){
+    var phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length === 10 ? data.payload.phone.trim() : false;
+    var password = typeof(data.payload.password) == 'string' && data.payload.phone.trim().length > 0 ? data.payload.password.trim() : false;
+    if(phone && password){
+        // lookup user with phone nubmer
+        _data.read('users',phone,function(err,userData){
+            if(!err && userData){
+                // hash sent password and compare to user object
+                var hashedPassword = helpers.hash(password);
+                if(hashedPassword == userData.hashedPassword){
+                    // if falid, create new token; set expiration date for one hour
+                    var tokenId = helpers.createRandomString(20);
+                    var expires = Date.now() + 1000 * 60 * 60;
+                    var tokenObject = {
+                        'phone': phone,
+                        'id': tokenId,
+                        'expires': expires,
+                    };
+                    // store token
+                    _data.create('tokens',tokenId,tokenObject,function(err){
+                        if(!err){
+                            callback(200,tokenObject)
+                        } else {
+                            callback(500,{'Error' : 'Could not create new token'});
+                        }
+                    });
+                } else {
+                    callback(400,{'Error' : 'Incorrect password; password did not match'})
+                }
+            } else {
+                callback(400,{'Error' : 'Could not find specified user'});
+            }
+        });
+
+    } else {
+        callback(400,{'Error' : 'Missing required fields'});
+    }
+};
+
+// tokens get
+handlers._tokens.get = function(data,callback){
+
+};
+
+// tokens put
+handlers._tokens.put = function(data,callback){
+
+};
+
+// tokens delete
+handlers._tokens.delete = function(data,callback){
+
+};
 
 // export module
 module.exports = handlers;
