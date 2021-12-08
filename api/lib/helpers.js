@@ -31,16 +31,16 @@ helpers.parseJsonToObject = function(str){
 
 // create string of random alphanumeric chars of a given length
 helpers.createRandomString = function(strLength){
-    strLength = typeof('strLength') == 'number' && strLength > 0 ? strLength : false;
+    strLength = typeof(strLength) == 'number' && strLength > 0 ? strLength : false;
     if(strLength){
         var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
         // initialize string
         var str = '';
-        for(let i = 1; i < strLength; i++){
+        for(i = 1; i <= strLength; i++){
             // get random char from possibleCharacters
             var randomCharacter = possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
             // append char to str
-            str += randomCharacter;
+            str+=randomCharacter;
         }
         return str;
 

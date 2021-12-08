@@ -49,14 +49,14 @@ handlers._users.post = function(data,callback){
         _data.read('users',phone,function(err,data){
             if(err){
                 // hash password
-                var hashedPasswrod = helpers.hash(password);
+                var hashedPassword = helpers.hash(password);
                 // create user object
-                if(hashedPasswrod) {
+                if(hashedPassword) {
                     var userObject = {
                         'firstName' : firstName,
                         'lastName' : lastName,
                         'phone' : phone,
-                        'hashedPassword' : hashedPasswrod,
+                        'hashedPassword' : hashedPassword,
                         'tosAgreement' : true
                     };
                     // store user
@@ -207,13 +207,13 @@ handlers._tokens.post = function(data,callback){
                 // hash sent password and compare to user object
                 var hashedPassword = helpers.hash(password);
                 if(hashedPassword == userData.hashedPassword){
-                    // if falid, create new token; set expiration date for one hour
+                    // if valid, create new token; set expiration date for one hour
                     var tokenId = helpers.createRandomString(20);
                     var expires = Date.now() + 1000 * 60 * 60;
                     var tokenObject = {
                         'phone': phone,
                         'id': tokenId,
-                        'expires': expires,
+                        'expires': expires
                     };
                     // store token
                     _data.create('tokens',tokenId,tokenObject,function(err){
