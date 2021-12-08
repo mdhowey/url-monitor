@@ -237,8 +237,23 @@ handlers._tokens.post = function(data,callback){
 };
 
 // tokens get
+// required data: id
+// optional data: none
 handlers._tokens.get = function(data,callback){
-
+    // check id is valid
+    var id = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+    if(id){
+        // lookup the token
+        _data.read('tokens',id,function(err,tokenData){
+            if(!err && tokenData){
+                callback(200,tokenData);
+            } else {
+                callback(404);
+            }
+        });
+    } else {
+        callback(400, { 'Error' : 'Missing required field' });
+    }
 };
 
 // tokens put
