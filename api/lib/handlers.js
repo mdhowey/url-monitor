@@ -440,7 +440,35 @@ handlers._checks.post = function(data,callback){
     }
 };
 
-
+// checks - get
+// required data: id
+// optional data: none
+handlers._checks.get = function(data,callback){
+    // check that id is valid
+    var id = typeof(data.queryStringObject.id) == 'string' && data.queryStringObject.id.trim().length == 20 ? data.queryStringObject.id.trim() : false;
+    if(id){
+        // lookup check
+        _data.read('checks',id,function(err,checkData){
+            if(!err && checkData) {
+                // get token from headers
+                var token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+                //verify given token from headers is valid and belongs to check's user
+                handlers._tokens.verifyToken(token,checkData.userPhone,function(tokenIsValid){
+                    if(tokenIsValid){
+                        // return checkData
+                        callback(200,checkData)
+                    } else {
+                        callback(403);
+                    }
+                });
+            } else {
+                callback(404);
+            }
+        });
+    } else {
+        callback(400, { 'Error' : 'Missing required field' });
+    }
+};
 
 // export module
 module.exports = handlers;
