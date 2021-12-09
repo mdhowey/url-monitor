@@ -172,7 +172,6 @@ handlers._users.put = function(data,callback){
 
 // users - delete
 // required field : phone
-// @TODO cleanup all users data with user obj
 handlers._users.delete = function(data,callback){
     // check phone number validity
     var phone = typeof(data.queryStringObject.phone) == 'string' && data.queryStringObject.phone.trim().length == 10 ? data.queryStringObject.phone.trim() : false;
@@ -180,14 +179,39 @@ handlers._users.delete = function(data,callback){
         // get token from headers
         var token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
         //verify given token from headers is valid
-        handlers._toekns.verifyToken(token,phone,function(tokenIsValid){
+        handlers._tokens.verifyToken(token,phone,function(tokenIsValid){
             if(tokenIsValid){
                 // lookup the user
-                _data.read('users',phone,function(err,data){
-                    if(!err && data){
+                _data.read('users',phone,function(err,userData){
+                    if(!err && userData){
                         _data.delete('users',phone,function(err){
                             if(!err){
-                                callback(200);
+                                // delete user's checks
+                                var userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
+                                var checksToDelete = userChecks.length;
+                                if(checksToDelete > 0){
+                                    var checksDeleted = 0;
+                                    var deletionErrors = false;
+                                    // loop through all deleted user checksDeleted
+                                    userChecks.forEach(function(checkId){
+                                        // delete check
+                                        _data.delete('checks',checkId,function(err){
+                                            if(err){
+                                                deletionErrors(true);
+                                            }
+                                            checksDeleted++;
+                                            if(checksDeleted == checksToDelete);
+                                            if(!deletionErrors){
+                                                callback(200);
+                                            } else {
+                                                callback(500,{ 'Error' : 'Error encountered when deleting user checks; not all checks may have been deleted succssfully' });
+                                            }
+                                        });
+                                    });
+
+                                } else {
+                                    callback(200);
+                                }
                             } else {
                                 callback(500,{ 'Error' : 'Could not delete specified user' });
                             }
