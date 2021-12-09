@@ -4,7 +4,8 @@
 
 // dependencies
 var _data = require('./data');
-var helpers = require('./helpers')
+var helpers = require('./helpers');
+var config = require('./config');
 
 // define handlers
 var handlers = {};
@@ -355,6 +356,91 @@ handlers._tokens.verifyToken = function(id,phone,callback){
         }
     });
 };
+
+// checks
+handlers.checks = function(data,callback){
+    var acceptableMethods = ['post','get','put','delete'];
+    if(acceptableMethods.indexOf(data.method) > -1){
+        handlers._checks[data.method](data,callback);
+    } else {
+        // 405 method not allowed
+        callback(405);
+    }
+};
+
+// container for checks methods
+handlers._checks = {};
+
+// checks - post
+// required data: protocol, url, method, successCodes, timeoutSeconds
+// optional data: none
+handlers._checks.post = function(data,callback){
+    // validate inputs
+    var protocol = typeof(data.payload.protocol) == 'string' && ['https', 'http'].indexOf(data.payload.protocol) > -1 ? data.payload.protocol : false;
+    var url = typeof(data.payload.url) == 'string' && data.payload.url.trim().length > 0 ? data.payload.url.trim() : false;
+    var method = typeof(data.payload.method) == 'string' && ['post','get','put','delete'].indexOf(data.payload.method) > -1 ? data.payload.method : false;
+    var successCodes = typeof(data.payload.successCodes) == 'object' && data.payload.successCodes instanceof Array && data.payload.successCodes.length > 0 ? data.payload.successCodes : false;
+    var timeoutSeconds = typeof(data.payload.timeoutSeconds) == 'number' && data.payload.timeoutSeconds % 1 === 0 && data.payload.timeoutSeconds >= 1 && data.payload.timeoutSeconds <= 5 ? data.payload.timeoutSeconds : false;
+    if(protocol && url && method && successCodes && timeoutSeconds) {
+        // get token from headers
+        var token = typeof(data.headers.token) == 'string' ? data.headers.token : false;
+        // lookup user with token
+        _data.read('tokens',token,function(err,tokenData){
+            if(!err && tokenData){
+                var userPhone = tokenData.phone;
+                // lookup userData
+                _data.read('users',userPhone,function(err,userData){
+                    if(!err && userData){
+                        var userChecks = typeof(userData.checks) == 'object' && userData.checks instanceof Array ? userData.checks : [];
+                        // verify user has less than maxChecks
+                        if(userChecks.length < config.maxChecks){
+                            // create random id for check
+                            var checkId = helpers.createRandomString(20);
+                            // create check obj, include user phone
+                            var checkObject = {
+                                'ID' : checkId,
+                                'userPhone' : userPhone,
+                                'protocol' : protocol,
+                                'method' : method,
+                                'successCodes' : successCodes,
+                                'timeoutSeconds' : timeoutSeconds
+                            };
+                            // save object
+                            _data.create('checks',checkId,checkObject,function(err){
+                                if(!err) {
+                                    // add check id to user's object
+                                    userData.checks = userChecks;
+                                    userData.checks.push(checkId);
+                                    // save new user data
+                                    _data.update('users',userPhone,userData,function(err){
+                                        if(!err){
+                                            // return data, check object
+                                            callback(200,checkObject);
+                                        } else {
+                                            callback(500,{ 'Error' : 'Could not update user with new check'});
+                                        }
+                                    });
+                                } else {
+                                    callback(500,{ 'Error' : 'Could not create new check' });
+                                }
+                            });
+                        } else {
+                            callback(400,{ 'Error' : 'User is already using max number of checks ('+config.maxChecks+')' });
+                        }
+                    } else {
+                        callback(403);
+                    }
+                });
+            } else {
+                callback(403);
+            }
+        });
+    } else {
+        callback(400,{ 'Error' : 'Missing required inputs or inputs invalid' });
+    }
+};
+
+
 
 // export module
 module.exports = handlers;
