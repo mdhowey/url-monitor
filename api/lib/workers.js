@@ -11,7 +11,7 @@ var https = require('https');
 var helpers = require('./helpers');
 var url = require('url');
 
-// instantiate worker object
+// instantiate workers object
 var workers = {};
 
 // lookup all check, get data, send data to validator
@@ -31,7 +31,7 @@ workers.gatherAllChecks = function() {
                 });
             });
         } else {
-            console.log("Error: Could not find any checks to process");
+            console.log(err);
         }
     });
 };
@@ -142,7 +142,7 @@ workers.proccessCheckOutcome = function(originalCheckData,checkOutcome){
             if(alertWarranted){
                 workers.alertUserToStatusChange(newCheckData);
             } else {
-                console.log("checkOutcome unchanged; no alert needed")
+                console.log("Check outcome unchanged; no alert needed")
             }
         } else {
             console.log("Error: Saving check update failed");

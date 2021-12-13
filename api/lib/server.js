@@ -101,7 +101,7 @@ server.router = {
  'checks' : handlers.checks
 };
 
-// server init funciton
+// server init script
 server.init = function(){
     // Start http server
     server.httpServer.listen(config.httpPort,function(){
