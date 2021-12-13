@@ -10,6 +10,9 @@ var http = require('http');
 var https = require('https');
 var helpers = require('./helpers');
 var url = require('url');
+var _logs = require('./logs');
+var util = require('util');
+var debug = util.debuglog('workers');
 
 // instantiate workers object
 var workers = {};
@@ -26,12 +29,12 @@ workers.gatherAllChecks = function() {
                         // pass to check validator; let function continue or break with error
                         workers.validateCheckData(originalCheckData);
                     } else {
-                        console.log("Error reading originalCheckData");
+                        ("Error reading originalCheckData");
                     }
                 });
             });
         } else {
-            console.log(err);
+            debug(err);
         }
     });
 };
@@ -59,7 +62,7 @@ workers.validateCheckData = function(originalCheckData){
     originalCheckData.timeoutSeconds){
         workers.performCheck(originalCheckData);
     } else {
-        console.log("Error: one of the checks is not properly formatted; flawed check is being skipped");
+        debug("Error: one of the checks is not properly formatted; flawed check is being skipped");
     }
 };
 
@@ -131,10 +134,15 @@ workers.proccessCheckOutcome = function(originalCheckData,checkOutcome){
     var state = !checkOutcome && checkOutcome.responseCode && originalCheckData.successCodes.indexOf(checkOutcome.responseCode) > -1 ? 'up' : 'down';
     // determine if alert is needed --> not default false, last recorded state has changed (i.e.- changing from 'up' to 'down' or 'down' to 'up')
     var alertWarranted = originalCheckData.lastChecked && originalCheckData.state !== state ? true : false;
+    // log outcome
+    var timeOfCheck = Date.now();
+    workers.log(originalCheckData,checkOutcome,state,alertWarranted,timeOfCheck);
     // update check data
     var newCheckData = originalCheckData;
     newCheckData.state = state;
-    newCheckData.lastChecked = Date.now();
+    newCheckData.lastChecked = timeOfCheck;
+
+
     // save updates
     _data.update('checks',newCheckData.id,newCheckData,function(err){
         if(!err){
@@ -142,10 +150,10 @@ workers.proccessCheckOutcome = function(originalCheckData,checkOutcome){
             if(alertWarranted){
                 workers.alertUserToStatusChange(newCheckData);
             } else {
-                console.log("Check outcome unchanged; no alert needed")
+                debug("Check outcome unchanged; no alert needed")
             }
         } else {
-            console.log("Error: Saving check update failed");
+            debug("Error: Saving check update failed");
         }
     });
 };
@@ -155,9 +163,32 @@ workers.alertUserToStatusChange = function(newCheckData){
     var msg = 'Alert: Your check for '+newCheckData.method.toUpperCase()+' '+newCheckData.protocol+'://'+newCheckData.url+' is currently '+newCheckData.state;
     helpers.sendTwilioSms(newCheckData.userPhone,msg,function(err){
         if(!err){
-            console.log("Success: User was alerted to status change via SMS", msg);
+            debug("Success: User was alerted to status change via SMS", msg);
         } else {
-            console.log("Error: Could not send SMS alert to user with state change in their check");
+            debug("Error: Could not send SMS alert to user with state change in their check");
+        }
+    });
+};
+
+workers.log = function(originalCheckData,checkOutcome,state,alertWarranted,timeOfCheck){
+    // form log _data
+    var logData = {
+        'check' : originalCheckData,
+        'outcome' : checkOutcome,
+        'state' : state,
+        'alert' : alertWarranted,
+        'time' : timeOfCheck
+    };
+    // convert data to querystring
+    var logString = JSON.stringify(logData);
+    // determine name of log fail
+    var logFileName = originalCheckData.id;
+    // append log string to failed
+    _logs.append(logFileName,logString,function(err){
+        if(!err) {
+            debug("Logging to file succeeded");
+        } else {
+            debug("Logging to file failed");
         }
     });
 };
@@ -169,12 +200,56 @@ workers.loop = function(){
     },1000 * 60);
 };
 
+// rotate (compress) log files
+workers.rotateLogs = function(){
+    // list non-compressed log files in .logs/
+    _logs.list(false,function(err,logs){
+        if(!err && logs && logs.length > 0){
+            logs.forEach(function(logName){
+                // compress data to different file
+                var logId = logName.replace('.log','');
+                var newFileId = logId+'-'+Date.now();
+                _logs.compress(logId,newFileId,function(err){
+                    if(!err){
+                        // truncate log
+                        _logs.truncate(logId,function(err){
+                            if(!err){
+                                debug('Success truncating logFile');
+                            } else {
+                                debug('Error truncating logFile');
+                            }
+                        });
+                    } else {
+                        debug('Error compressing one of the log files',err);
+                    }
+                });
+            });
+
+        } else {
+            debug('Error : could not find any logs to rotate');
+        }
+    });
+}
+
+// timer to execute log rotation process (every 24 hours)
+workers.logRotationLoop = function(){
+    setInterval(function(){
+        workers.rotateLogs();
+    },1000 * 60 * 60 * 24); // once a day --> 24 hours
+}
+
 // init function
 workers.init = function() {
+    // yellow --> workers are running
+    console.log('\x1b[33m%s\x1b[0m','Background workers are running');
     // execute checks
     workers.gatherAllChecks();
     // invoke execution loop
     workers.loop();
+    // compress all logs immediately
+    workers.rotateLogs();
+    // call compression loop --> logs will later be compressed
+    workers.logRotationLoop();
 };
 
 // export workers
