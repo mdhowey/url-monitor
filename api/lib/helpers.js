@@ -56,7 +56,7 @@ helpers.sendTwilioSms = function(phone,msg,callback){
     // validate params
     phone = typeof(phone) == 'string' && phone.trim().length == 10 ? phone.trim() : false;
     msg = typeof(msg) == 'string' && msg.trim().length > 0 && msg.trim().length <= 1600 ? msg.trim() : false;
-    if(phone && msg) {
+    if(phone && msg){
         // config req payload for payload
         var payload = {
             'From' : config.twilio.fromPhone,
@@ -73,8 +73,8 @@ helpers.sendTwilioSms = function(phone,msg,callback){
             'path' : '/2010-04-01/Accounts/'+config.twilio.accountSid+'/Messages.json',
             'auth' : config.twilio.accountSid+':'+config.twilio.authToken,
             'headers' : {
-                'Content-Type' : 'application/x-www-form-urlenconded',
-                'Content-Length' : Buffer.byteLength(stringPayload)
+                'Content-Type' : 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(stringPayload)
             }
         };
         // instantiate req object
