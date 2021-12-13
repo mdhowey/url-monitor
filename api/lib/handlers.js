@@ -422,7 +422,7 @@ handlers._checks.post = function(data,callback){
                             var checkId = helpers.createRandomString(20);
                             // create check obj, include user phone
                             var checkObject = {
-                                'ID' : checkId,
+                                'id' : checkId,
                                 'userPhone' : userPhone,
                                 'protocol' : protocol,
                                 'url' : url,
