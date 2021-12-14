@@ -64,6 +64,9 @@ server.unifiedServer = function(req,res){
         // choose correct handler req should go to; default to 404
         var chosenHandler = typeof(server.router[trimmedPath]) !== 'undefined' ? server.router[trimmedPath] : handlers.notFound;
 
+        // if req within public, use public handler
+        chosenHandler = trimmedPath.indexOf('public/') > -1 ? handlers.public : chosenHandler;
+
         // construct data object for handler
         var data = {
             'trimmedPath' : trimmedPath,
@@ -74,19 +77,53 @@ server.unifiedServer = function(req,res){
         };
 
         // route req to handler specified in router
-        chosenHandler(data,function(statusCode,payload){
+        chosenHandler(data,function(statusCode,payload,contentType){
+            // determine res type (default --> JSON)
+            contentType = typeof(contentType) == 'string' ? contentType : 'json';
             // use status code called back by handler or default 200
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
 
-            // use payload called back by handler or default to {}
-            payload = typeof(payload) == 'object' ? payload : {};
-
-            // convert payload to string_decodervar
-            var payloadString = JSON.stringify(payload);
-
-            // return response
-            // Content-Type is a header --> parse as JSON
-            res.setHeader('Content-Type','application/json');
+            // return response parts that are content-specfic
+            var payloadString = '';
+            if(contentType == 'json'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','application/json');
+                // use payload called back by handler or default to {}
+                payload = typeof(payload) == 'object' ? payload : {};
+                // convert payload to string_decodervar
+                payloadString = JSON.stringify(payload);
+            }
+            if(contentType == 'html'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','text/html');
+                payloadString = typeof(payload) == 'string' ? payload : '';
+            }
+            if(contentType == 'favicon'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','image/x-icon');
+                payloadString = typeof(payload) !== 'undefined' ? payload : '';
+            }
+            if(contentType == 'css'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','text/class');
+                payloadString = typeof(payload) !== 'undefined' ? payload : '';
+            }
+            if(contentType == 'png'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','image/png');
+                payloadString = typeof(payload) !== 'undefined' ? payload : '';
+            }
+            if(contentType == 'jpg'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','image/jpeg');
+                payloadString = typeof(payload) !== 'undefined' ? payload : '';
+            }
+            if(contentType == 'plain'){
+                // Content-Type is a header --> parse as JSON
+                res.setHeader('Content-Type','text/plain');
+                payloadString = typeof(payload) !== 'undefined' ? payload : '';
+            }
+            // return res-parts common to all content-types
             res.writeHead(statusCode);
             res.end(payloadString);
             // response 200 --> green; other --> red
@@ -101,10 +138,30 @@ server.unifiedServer = function(req,res){
 
 // define request router
 server.router = {
- 'ping' : handlers.ping,
- 'users' : handlers.users,
- 'tokens' : handlers.tokens,
- 'checks' : handlers.checks
+    // user-facing routes
+    '' : handlers.index, // serves index file of application
+    // account routes
+    'account/create' : handlers.accountCreate, // register route
+    'account/edit' : handlers.accountEdit,
+    'account/deleted' : handlers.accountDeleted, // delete account
+    // sessions routes
+    'session/create' : handlers.sessionCreate, // login route
+    'session/deleted' : handlers.sessionDeleted, //logout route
+    // checks routes
+    'checks/all' : handlers.checksList, // view all user checks route
+    'checks/create' : handlers.checksCreate, // add user check route
+    'checks/edit' : handlers.checksEdit, // edit check
+
+    // ping route
+    'ping' : handlers.ping,
+    // good practice to refactor routes to use api/ prefix
+    'api/users' : handlers.users,
+    'api/tokens' : handlers.tokens,
+    'api/checks' : handlers.checks,
+
+    // static asset routes
+    'favicon.ico' : handlers.favicon,
+    'public' : handlers.public
 };
 
 // server init script

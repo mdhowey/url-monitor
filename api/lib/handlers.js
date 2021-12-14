@@ -1,5 +1,6 @@
 /*
  * Request handlers
+ *
  */
 
 // dependencies
@@ -10,14 +11,112 @@ var config = require('./config');
 // define handlers
 var handlers = {};
 
+/*
+ * HTML handlers
+ *
+ */
+
+// index handler
+handlers.index = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // prep data for interpolation
+        var templateData = {
+            'head.title' : 'This is the title',
+            'head.description' : 'This is the meta description',
+            'body.title' : 'Hello templated world!',
+            'body.class' : 'index',
+        };
+        // read index template as string
+        helpers.getTemplate('index',templateData,function(err,str){
+            if(!err && str){
+                // add universal header-footer
+                helpers.addUniversalTemplates(str,templateData,function(err,str){
+                    if(!err && str){
+                        // return page as html
+                        callback(200,str,'html');
+                    } else {
+                        callback(500,undefined,'html');
+                    }
+                });
+            } else {
+                callback(500,undefined,'html');
+            }
+        });
+    } else {
+        callback(405,undefined,'html');
+    }
+};
+
+// favicon handler
+handlers.favicon = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // read in favicon data
+        helpers.getStaticAsset('favicon.ico',function(err,data){
+            if(!err && data){
+                // callback data
+                callback(200,data,'favicon');
+            } else {
+                callback(500);
+            }
+        });
+    } else {
+        callback(405);
+    }
+};
+
+// public assests handler
+handlers.public = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // get req file name
+        var trimmedAssetName = data.trimmedPath.replace('public/','');
+        if(trimmedAssetName.length > 0){
+            // read in assest data
+            helpers.getStaticAsset(trimmedAssetName,function(err,data){
+                if(!err && data){
+                    // determine content type; default to plain text
+                    var contentType = 'plain';
+                    // check for content type of known assests
+                    if(trimmedAssetName.indexOf('.css') > -1){
+                        contentType = 'css';
+                    }
+                    if(trimmedAssetName.indexOf('.png') > -1){
+                        contentType = 'png';
+                    }
+                    if(trimmedAssetName.indexOf('.jpeg') > -1){
+                        contentType = 'jpeg';
+                    }
+                    if(trimmedAssetName.indexOf('.ico') > -1){
+                        contentType = 'ico';
+                    }
+                    // callback data
+                    callback(200,data,contentType);
+                } else {
+                    callback(405);
+                }
+            });
+        } else {
+            callback(405);
+        }
+    } else {
+        callback(405);
+    }
+};
+/*
+ * JSON handlers
+ *
+ */
+
 // ping handler
 handlers.ping = function(data,callback){
-    callback(200);
+callback(200);
 }
 
 // not found handler (404)
 handlers.notFound = function(data,callback){
-    callback(404);
+callback(404);
 };
 
 // users
