@@ -169,7 +169,7 @@ helpers.interpolate = function(str,data){
 // get contents of static (public) assest
 helpers.getStaticAsset = function(fileName,callback){
     fileName = typeof(fileName) == 'string' && fileName.length > 0 ? fileName : false;
-    if(filename){
+    if(fileName){
         var publicDir = path.join(__dirname,'/../public/');
         fs.readFile(publicDir+fileName,function(err,data){
             if(!err && data){
