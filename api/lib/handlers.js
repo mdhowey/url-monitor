@@ -47,6 +47,37 @@ handlers.index = function(data,callback){
     }
 };
 
+// create account handler
+handlers.accountCreate = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // prep data for interpolation
+        var templateData = {
+            'head.title' : 'Create an Account',
+            'head.description' : 'Sign up is easy and only takes a few seconds',
+            'body.class' : 'accountCreate'
+        };
+        // read index template as string
+        helpers.getTemplate('accountCreate',templateData,function(err,str){
+            if(!err && str){
+                // add universal header-footer
+                helpers.addUniversalTemplates(str,templateData,function(err,str){
+                    if(!err && str){
+                        // return page as html
+                        callback(200,str,'html');
+                    } else {
+                        callback(500,undefined,'html');
+                    }
+                });
+            } else {
+                callback(500,undefined,'html');
+            }
+        });
+    } else {
+        callback(405,undefined,'html');
+    }
+};
+
 // favicon handler
 handlers.favicon = function(data,callback){
     // reject all non-GET requests
