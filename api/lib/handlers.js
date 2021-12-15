@@ -22,10 +22,9 @@ handlers.index = function(data,callback){
     if(data.method == 'get'){
         // prep data for interpolation
         var templateData = {
-            'head.title' : 'This is the title',
-            'head.description' : 'This is the meta description',
-            'body.title' : 'Hello templated world!',
-            'body.class' : 'index',
+            'head.title' : 'Uptime Monitoring - Madie Simple',
+            'head.description' : 'We offer free simple uptime Monitoring for HTTP/HTTPS sites of all kinds. When your site goes down, we will let you know',
+            'body.class' : 'index'
         };
         // read index template as string
         helpers.getTemplate('index',templateData,function(err,str){
