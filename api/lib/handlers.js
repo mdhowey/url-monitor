@@ -22,7 +22,7 @@ handlers.index = function(data,callback){
     if(data.method == 'get'){
         // prep data for interpolation
         var templateData = {
-            'head.title' : 'Uptime Monitoring - Madie Simple',
+            'head.title' : 'Uptime Monitoring - Made Simple',
             'head.description' : 'We offer free simple uptime Monitoring for HTTP/HTTPS sites of all kinds. When your site goes down, we will let you know',
             'body.class' : 'index'
         };
@@ -59,6 +59,68 @@ handlers.accountCreate = function(data,callback){
         };
         // read index template as string
         helpers.getTemplate('accountCreate',templateData,function(err,str){
+            if(!err && str){
+                // add universal header-footer
+                helpers.addUniversalTemplates(str,templateData,function(err,str){
+                    if(!err && str){
+                        // return page as html
+                        callback(200,str,'html');
+                    } else {
+                        callback(500,undefined,'html');
+                    }
+                });
+            } else {
+                callback(500,undefined,'html');
+            }
+        });
+    } else {
+        callback(405,undefined,'html');
+    }
+};
+
+// create new session
+handlers.sessionCreate = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // prep data for interpolation
+        var templateData = {
+            'head.title' : 'Login to your Account',
+            'head.description' : 'Please enter your phone number and password to access your account.',
+            'body.class' : 'sessionCreate'
+        };
+        // read index template as string
+        helpers.getTemplate('sessionCreate',templateData,function(err,str){
+            if(!err && str){
+                // add universal header-footer
+                helpers.addUniversalTemplates(str,templateData,function(err,str){
+                    if(!err && str){
+                        // return page as html
+                        callback(200,str,'html');
+                    } else {
+                        callback(500,undefined,'html');
+                    }
+                });
+            } else {
+                callback(500,undefined,'html');
+            }
+        });
+    } else {
+        callback(405,undefined,'html');
+    }
+};
+
+// end session --> logout
+handlers.sessionDeleted = function(data,callback){
+    // reject all non-GET requests
+    if(data.method == 'get'){
+        // prep data for interpolation
+        var templateData = {
+            'head.title' : 'Logged out',
+            'head.description' : 'You have been logged out of your account.',
+            'body.class' : 'sessionDeleted'
+        };
+        // read index template as string
+        helpers.getTemplate('sessionDeleted',templateData,function(err,str){
             if(!err && str){
                 // add universal header-footer
                 helpers.addUniversalTemplates(str,templateData,function(err,str){

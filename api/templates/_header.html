@@ -6,6 +6,7 @@
         <base href="{global.baseUrl}" />
 
         <!-- meta tags -->
+        <title>{head.title} | {global.appName}</title>
         <meta name="description" content="{head.description}">
 
         <!-- static assests -->
@@ -13,7 +14,6 @@
         <link type="image/x-icon" rel="icon" href="favicon.ico">
         <script type="application/javascript" charset="utf-8" src="public/app.js"></script>
 
-        <title>{head.title} | {global.appName}</title>
     </head>
     <body class="{body.class}">
         <!-- page wrapper -->
@@ -29,20 +29,20 @@
                 <li>
                     <a href="/">Home</a>
                 </li>
-                <li>
-                    <a class="loggedOut" href="/account/create">Signup</a>
+                <li class="loggedOut">
+                    <a href="/account/create">Signup</a>
                 </li>
-                <li>
-                    <a class="loggedOut" href="/session/create">Login</a>
+                <li class="loggedOut">
+                    <a href="/session/create">Login</a>
                 </li>
-                <li>
-                    <a class="loggedIn" href="/checks/all">Dashboard</a>
+                <li class="loggedIn">
+                    <a href="/checks/all">Dashboard</a>
                 </li>
-                <li>
-                    <a class="loggedIn" href="/account/edit">Account Settings</a>
+                <li class="loggedIn">
+                    <a href="/account/edit">Account Settings</a>
                 </li>
-                <li>
-                    <a class="loggedIn" href="#">Logout</a>
+                <li class="loggedIn">
+                    <a href="#" id="logoutButton">Logout</a>
                 </li>
             </ul>
         </div>
